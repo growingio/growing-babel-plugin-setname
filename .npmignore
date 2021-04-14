@@ -1,0 +1,14 @@
+# Created by .ignore support plugin (hsz.mobi)
+.babelrc
+.eslintrc.js
+.gitignore
+rollup.config.js
+tsconfig.json
+yarn.lock
+
+test
+src
+node_modules
+.idea
+.DS_Store
+.eslintcache
