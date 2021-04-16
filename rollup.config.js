@@ -14,18 +14,25 @@ function getOutput({ file, name, format = 'cjs' }) {
   }
 }
 
-export default {
-  input: 'src/index.js',
-  output: getOutput({
-    file: 'index.js',
-    name: 'index'
-  }),
-  plugins: [
-    commonjs(),
-    babel({
-      exclude: 'node_modules',
-      babelHelpers: 'bundled',
-      extensions
+export default [
+  {
+    input: 'src/index.js',
+    output: getOutput({
+      file: 'index.js'
+    }),
+    plugins: [
+      commonjs(),
+      babel({
+        exclude: 'node_modules',
+        babelHelpers: 'bundled',
+        extensions
+      })
+    ]
+  },
+  {
+    input: 'src/setname.js',
+    output: getOutput({
+      file: 'setname.js'
     })
-  ]
-}
+  }
+]

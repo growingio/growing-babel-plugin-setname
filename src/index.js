@@ -1,5 +1,19 @@
 const { resolve } = require('path')
 const types = require('@babel/types')
+const { NodePath } = require('@babel/traverse')
+
+// 一些不切换的方法名
+const NO_REPLACE = new Set(['render'])
+
+function hexHash(str) {
+  let hash = 5381,
+    i = str.length
+
+  while (i) {
+    hash = (hash * 33) ^ str.charCodeAt(--i)
+  }
+  return (hash >>> 0).toString(16)
+}
 
 function getIncrementId(prefix = '_') {
   let i = 0
@@ -9,11 +23,9 @@ function getIncrementId(prefix = '_') {
 }
 
 /**
- * 返回加$前缀的标识符
+ * 返回加$前缀的名字
  */
-function $identifier(name) {
-  return types.identifier(`$${name}`)
-}
+const $prefix = name => `$${name}`
 
 /**
  * 从字符串或标识符中获取名字
@@ -28,32 +40,22 @@ function getNameByIdtOrSL(node) {
   return '_'
 }
 
-function hexHash(str) {
-  let hash = 5381,
-    i = str.length
-
-  while (i) {
-    hash = (hash * 33) ^ str.charCodeAt(--i)
+function getFunctionSelfName(path) {
+  let node = path.node
+  let id = node.id
+  if (id) {
+    return getNameByIdtOrSL(id)
   }
-  return (hash >>> 0).toString(16)
-}
-
-function hasIdentifierName(identifier) {
-  return identifier && !!identifier.name
+  return null
 }
 
 /**
- * 判断是不是匿名函数
+ * 判断该函数是否不是ClassMethod和ObjectMethod
  * @param path
  * @return {boolean}
  */
-function isNoneFunction(path) {
-  return (
-    !types.isClassMethod(path) &&
-    !types.isObjectMethod(path) &&
-    types.isFunction(path) &&
-    !(hasIdentifierName(path.node.id) || hasIdentifierName(path.node.key))
-  )
+function isSimpleFunction(path) {
+  return !types.isClassMethod(path) && !types.isObjectMethod(path)
 }
 
 /**
@@ -62,38 +64,6 @@ function isNoneFunction(path) {
 function isSelfCallNoneFunction(path) {
   let parent = path.parent
   return types.isCallExpression(parent) && parent.callee === path.node
-}
-
-/**
- * 将匿名函数重命名
- * @param path  函数访问路径
- * @param keyGenerator 函数名生成器
- */
-function renameNoneFunction(path, keyGenerator) {
-  if (!path) return
-  if (!isNoneFunction(path)) return
-  // 自执行函数不处理
-  if (isSelfCallNoneFunction(path)) return
-
-  let body = path.node.body
-  if (types.isExpression(body)) {
-    body = types.blockStatement([types.returnStatement(body)])
-  }
-
-  return path.replaceWith(
-    types.functionExpression(
-      keyGenerator(path),
-      path.node.params,
-      body,
-      path.node.generator,
-      path.node.async
-    )
-  )
-}
-
-function getRelativePath(state) {
-  const { cwd, filename } = state
-  return filename.replace(cwd, '').replace(/\\+/g, '/')
 }
 
 function isLikeDefinePropertyCallParam(func) {
@@ -108,7 +78,75 @@ function isLikeDefinePropertyCallParam(func) {
   }
 }
 
-function calcIdentifierByPath(path, getIdByFilepath) {
+/**
+ * 判断是不是setName的表达式
+ * @param {string} callName
+ * @param node 节点
+ * @return {boolean}
+ */
+function isSetNameCallExpression(callName, node) {
+  if (!!node && types.isCallExpression(node)) {
+    return node.callee.name === callName
+  }
+  return false
+}
+
+/**
+ * 使用执行语句替换函数声明和函数表达式
+ *
+ * @param {string} callName setName方法的函数名
+ * @param {NodePath} funcPath 当前函数
+ * @param nameGenerator 用于生成函数名
+ */
+function replaceWithCallStatement(callName, funcPath, nameGenerator) {
+  if (!funcPath) return
+  if (isSetNameCallExpression(callName, funcPath.parent)) return
+  if (!isSimpleFunction(funcPath)) return
+  if (isSelfCallNoneFunction(funcPath)) return
+
+  let functionName = getFunctionSelfName(funcPath)
+
+  if (NO_REPLACE.has(functionName)) {
+    return funcPath
+  }
+
+  if (!functionName) {
+    functionName = nameGenerator(funcPath)
+  }
+
+  let node = funcPath.node
+  if (types.isFunctionDeclaration(node)) {
+    // 函数声明替换为变量声明形式以保留函数名
+    node = types.functionExpression(
+      null,
+      node.params,
+      node.body,
+      node.generator,
+      node.async
+    )
+    return funcPath.replaceWith(
+      types.variableDeclaration('let', [
+        types.variableDeclarator(types.identifier(functionName), node)
+      ])
+    )
+  }
+
+  const callExpr = types.callExpression(types.identifier(callName), [
+    types.stringLiteral(functionName),
+    node
+  ])
+
+  return funcPath.replaceWith(callExpr)
+}
+
+/**
+ * 根据当前函数路径计算函数的名字
+ *
+ * @param {NodePath} path
+ * @param getIdByFilepath
+ * @return {string}
+ */
+function calcNameByPath(path, getIdByFilepath) {
   let parent = path.parent
 
   /**
@@ -116,7 +154,7 @@ function calcIdentifierByPath(path, getIdByFilepath) {
    * var abc = () => {}
    */
   if (types.isVariableDeclarator(parent)) {
-    return types.identifier(parent.id.name)
+    return parent.id.name
   }
   /**
    * 赋值表达式
@@ -127,30 +165,27 @@ function calcIdentifierByPath(path, getIdByFilepath) {
   if (types.isAssignmentExpression(parent) && parent.operator === '=') {
     const left = parent.left
     if (types.isMemberExpression(left)) {
-      return $identifier(getNameByIdtOrSL(left.property))
+      return $prefix(getNameByIdtOrSL(left.property))
     }
     if (types.isIdentifier(left)) {
-      return types.identifier(left.name)
+      return left.name
     }
   }
   /**
    * 类似 _defineProperty(this,'abc',function(){}) 处理
    */
   if (isLikeDefinePropertyCallParam(path)) {
-    let name = path.container[1].value
-    return types.identifier(name)
+    return path.container[1].value
   }
-  return $identifier(getIdByFilepath())
+  return $prefix(getIdByFilepath())
 }
 
-function JSXAttributeVisitor(getName) {
-  return function (path) {
-    path.traverse({
-      Function(funPath) {
-        renameNoneFunction(funPath, () => types.identifier(getName()))
-      }
-    })
-  }
+/**
+ * 获取当前文件相对地址
+ */
+function getRelativePath(state) {
+  const { cwd, filename } = state
+  return filename.replace(cwd, '').replace(/\\+/g, '/')
 }
 
 /**
@@ -163,46 +198,80 @@ function isNeedDeal(state) {
   return includes.map(v => resolve(cwd, v)).some(v => filename.startsWith(v))
 }
 
-function babelPlugin() {
+// 获取设置名函数方法名
+const diCalleeName = ({ opts }) => opts.callee || '_GIO_DI_NAME_'
+
+function babelPlugin({ template }) {
   let idMap = {}
   function getIdByFilepath(filepath) {
     let id = idMap[filepath] || 0
     return `${filepath}${(idMap[filepath] = ++id)}`
   }
+
   return {
-    name: 'class-prop-function-rename',
+    name: 'babel-plugin-setname',
     pre() {
       idMap = {}
     },
     visitor: {
+      /**
+       * @param {NodePath} path
+       * @param state
+       */
+      Program(path, state) {
+        let firstBody = path.get('body.0')
+        let buildRequire = template(
+          `var FUNC_NAME = require('babel-plugin-setname/lib/setname')`
+        )
+        if (firstBody) {
+          firstBody.insertBefore(
+            buildRequire({
+              FUNC_NAME: diCalleeName(state)
+            })
+          )
+        }
+      },
       Class(path, state) {
         if (!isNeedDeal(state)) return
-
-        const jsxFuncIdentifier = getIncrementId('anonymousFunc')
+        const callName = diCalleeName(state)
+        const jsxFuncName = getIncrementId('anonymousFunc')
 
         path.traverse({
           ClassProperty(propPath) {
             const key = propPath.get('key').node
             const value = propPath.get('value')
-            renameNoneFunction(value, () => key)
+            replaceWithCallStatement(callName, value, () => key.name)
           },
-          JSXAttribute: JSXAttributeVisitor(jsxFuncIdentifier)
+          JSXAttribute(path) {
+            path.traverse({
+              Function(funPath) {
+                replaceWithCallStatement(callName, funPath, jsxFuncName)
+              }
+            })
+          }
         })
       },
       Function(path, state) {
         if (!isNeedDeal(state)) return
 
+        const callName = diCalleeName(state)
         const filepath = hexHash(getRelativePath(state))
 
-        let renameResult = renameNoneFunction(path, self =>
-          calcIdentifierByPath(self, () => getIdByFilepath(filepath))
-        )
-
-        if (!renameResult) {
-          const jsxFuncIdentifier = getIncrementId('anonymousFunc')
+        if (
+          !replaceWithCallStatement(callName, path, self =>
+            calcNameByPath(self, () => getIdByFilepath(filepath))
+          )
+        ) {
+          const jsxFuncName = getIncrementId('anonymousFunc')
 
           path.traverse({
-            JSXAttribute: JSXAttributeVisitor(jsxFuncIdentifier)
+            JSXAttribute(path) {
+              path.traverse({
+                Function(funPath) {
+                  replaceWithCallStatement(callName, funPath, jsxFuncName)
+                }
+              })
+            }
           })
         }
       }
