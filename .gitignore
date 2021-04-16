@@ -6,3 +6,5 @@ dist
 *.iml
 .DS_Store
 babel-plugins
+.vscode
+__output__

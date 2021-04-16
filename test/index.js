@@ -24,8 +24,8 @@ files.forEach(filename => {
       [
         './src/index.js',
         {
-          includes: ['test/__codes__']
-          // callee: '__setName'
+          includes: ['test/__codes__'],
+          callee: '__setName__'
         }
       ]
     ]
