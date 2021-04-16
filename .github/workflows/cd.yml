@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 12
-          registry-url: 'https://registry.npmjs.org/'
+          registry-url: https://registry.npmjs.org/
       - name: Cache Node Modules
         id: cache_deps
         uses: actions/cache@v2
