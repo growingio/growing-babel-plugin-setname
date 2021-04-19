@@ -31,4 +31,4 @@ jobs:
       - name: Publish NPM
         run: yarn publish --non-interactive --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GROWING_NPM_TOKEN }}  # 以公司账户发布到npm库

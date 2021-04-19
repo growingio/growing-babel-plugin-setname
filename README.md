@@ -25,5 +25,5 @@ module.exports = {
 ```
 
 - includes: 需要设置函数名的包
-- callee: 设置函数名的方法名(default: _GIO_DI_NAME_)
+- callee: 设置函数名的方法名(default: `_GIO_DI_NAME_`)
 
