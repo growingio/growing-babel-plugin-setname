@@ -1,3 +1,4 @@
+const types = require('@babel/types')
 const { NodePath } = require('@babel/traverse')
 const { diCalleeName, isNeedDealFile } = require('./options')
 const {
@@ -7,6 +8,42 @@ const {
   replaceSpreadWithCallStatement,
   ACTION_REX
 } = require('./transform')
+
+/**
+ * 判断是不是已经添加过导入语句
+ * @param {NodePath[]} body
+ * @param {string} varName
+ * @return {boolean}
+ */
+function hasRequire(body, varName) {
+  return body.some(path => {
+    if (types.isVariableDeclaration(path)) {
+      const kind = path.node.kind
+      if (kind !== 'var') {
+        return false
+      }
+
+      const declarations = path.node.declarations
+      if (declarations.length !== 1) {
+        return false
+      }
+
+      const declarator = declarations[0]
+      if (!types.isVariableDeclarator(declarator)) {
+        return false
+      }
+
+      return (
+        declarator.id.name === varName &&
+        types.isCallExpression(declarator.init) &&
+        declarator.init.callee.name === 'require' &&
+        declarator.init.arguments[0].value ===
+          'babel-plugin-setname/lib/setname'
+      )
+    }
+    return false
+  })
+}
 
 /**
  * 访问React组件
@@ -35,6 +72,10 @@ function visitorComponent(path, state) {
 }
 
 function babelPlugin({ template }) {
+  const buildRequire = template(
+    `var FUNC_NAME = require('babel-plugin-setname/lib/setname')`
+  )
+
   return {
     name: 'babel-plugin-setname',
     visitor: {
@@ -44,14 +85,15 @@ function babelPlugin({ template }) {
        */
       Program(path, state) {
         if (!isNeedDealFile(state)) return
-        let firstBody = path.get('body.0')
-        let buildRequire = template(
-          `var FUNC_NAME = require('babel-plugin-setname/lib/setname')`
-        )
+        const funcName = diCalleeName(state)
+        const body = path.get('body')
+        if (!body || body.length === 0 || hasRequire(body, funcName)) return
+
+        const firstBody = body[0]
         if (firstBody) {
           firstBody.insertBefore(
             buildRequire({
-              FUNC_NAME: diCalleeName(state)
+              FUNC_NAME: funcName
             })
           )
         }
