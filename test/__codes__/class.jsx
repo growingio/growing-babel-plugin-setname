@@ -8,18 +8,15 @@ class Class extends Component {
     onClick() {}
   }
 
-  onClick() {}
+  doOnClick() {}
 
   aaa() {}
 
   render() {
     return (
       <div {...this.actions}>
-        <button onClick={() => {}}/>
-        <button onClick={() => {}}/>
-        <button onClick={this.aaa}/>
-        <button onClick={this.actions['onClick']}/>
-        <button onClick={this['onClick']}/>
+        <button onClick={this.doOnClick.bind(this)}/>
+        <button onClick={this.doOnClick.bind({  })}/>
       </div>
     )
   }

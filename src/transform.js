@@ -29,8 +29,8 @@ const getPropertyValue = node => {
 
 /**
  * 从成员表达式中获取函数名
- * 使用_连接
- * @param node
+ * 成员之间使用_连接
+ * @param node callee
  * @return {string}
  */
 const getNameByMemberExpression = node => {
@@ -40,20 +40,26 @@ const getNameByMemberExpression = node => {
 
   if (types.isThisExpression(object)) {
     return propName
-  } else if (types.isIdentifier(object)) {
-    let name = object.name
-    return `${name}_${propName}`
+  }
+
+  let name = ''
+  if (types.isIdentifier(object)) {
+    name = object.name
   } else if (types.isMemberExpression(object)) {
     // 只找一层 this.props.login => props_login
-    let mpName = getPropertyValue(object.property)
-    return `${mpName}_${propName}`
+    name = getPropertyValue(object.property)
   }
+
+  if (name) {
+    return propName !== 'bind' ? `${name}_${propName}` : name
+  }
+
   return propName
 }
 
 /**
- * 从成员表达式中获取函数名
- * 使用$连接
+ * 从Call表达式中获取函数名
+ * 函数名和参数之间使用使用$连接
  * @param node
  * @return {string}
  */
@@ -67,6 +73,8 @@ const getNameByCallExpression = node => {
       if (types.isObjectExpression(nv)) return '$'
       if (types.isArrayExpression(nv)) return '$$'
       if (types.isFunction(nv)) return '$$$'
+      // this表达式为空参
+      if (types.isThisExpression(nv)) return ''
       return '_'
     })
     .filter(Boolean)
@@ -80,7 +88,7 @@ const getNameByCallExpression = node => {
   }
 
   if (callString || argString) {
-    return `${callString}$${argString}`
+    return `${callString}${argString ? '$' + argString : ''}`
   }
   return ''
 }
