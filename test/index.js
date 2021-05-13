@@ -25,7 +25,8 @@ files.forEach(filename => {
         './src/index.js',
         {
           includes: ['test/__codes__'],
-          callee: '__setName__'
+          callee: '__setName__',
+          package: '@gio/setname'
         }
       ]
     ]

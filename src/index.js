@@ -1,6 +1,10 @@
 const types = require('@babel/types')
 const { NodePath } = require('@babel/traverse')
-const { diCalleeName, isNeedDealFile } = require('./options')
+const {
+  diCalleeName,
+  isNeedDealFile,
+  diMethodFromPackage
+} = require('./options')
 const {
   getIncrementId,
   getComponentName,
@@ -72,9 +76,7 @@ function visitorComponent(path, state) {
 }
 
 function babelPlugin({ template }) {
-  const buildRequire = template(
-    `var FUNC_NAME = require('babel-plugin-setname/lib/setname')`
-  )
+  const buildRequire = template(`var FUNC_NAME = require('PACKAGE')`)
 
   return {
     name: 'babel-plugin-setname',
@@ -86,6 +88,7 @@ function babelPlugin({ template }) {
       Program(path, state) {
         if (!isNeedDealFile(state)) return
         const funcName = diCalleeName(state)
+        const fromPackage = diMethodFromPackage(state)
         const body = path.get('body')
         if (!body || body.length === 0 || hasRequire(body, funcName)) return
 
@@ -93,7 +96,8 @@ function babelPlugin({ template }) {
         if (firstBody) {
           firstBody.insertBefore(
             buildRequire({
-              FUNC_NAME: funcName
+              FUNC_NAME: funcName,
+              PACKAGE: fromPackage
             })
           )
         }

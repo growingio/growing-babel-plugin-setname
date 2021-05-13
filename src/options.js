@@ -13,7 +13,12 @@ function isNeedDealFile(state) {
 // 获取设置名函数方法名
 const diCalleeName = ({ opts }) => opts.callee || '_GIO_DI_NAME_'
 
+// 获取设置函数名的方法来自哪个包
+const diMethodFromPackage = ({ opts }) =>
+  opts.package || 'babel-plugin-setname/lib/setname'
+
 module.exports = {
   isNeedDealFile,
-  diCalleeName
+  diCalleeName,
+  diMethodFromPackage
 }
