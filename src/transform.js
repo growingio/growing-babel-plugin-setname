@@ -1,31 +1,16 @@
-const types = require('@babel/types')
-const { NodePath } = require('@babel/traverse')
+import types from '@babel/types'
+import { NodePath } from '@babel/traverse'
+import {
+  getLiteralValue,
+  isSymbol,
+  getPropertyValue,
+  getSymbolDesc,
+  isThisMemberExpression,
+  getArrayLength,
+  getObjectKeyNumber
+} from './nodetk'
 
-const ACTION_REX = /^on[A-Z][a-zA-Z]+/
-
-function getIncrementId(prefix = '_') {
-  let i = 0
-  return function () {
-    return prefix + i++
-  }
-}
-
-/**
- * 获取组件名
- * @param {NodePath} componentPath 组件路径
- * @return {string | null}
- */
-function getComponentName(componentPath) {}
-
-const getPropertyValue = node => {
-  if (types.isIdentifier(node)) {
-    return node.name
-  }
-  if (types.isStringLiteral(node)) {
-    return node.value
-  }
-  return ''
-}
+export const ACTION_REX = /^on[A-Z][a-zA-Z]+/
 
 /**
  * 从成员表达式中获取函数名
@@ -46,8 +31,12 @@ const getNameByMemberExpression = node => {
   if (types.isIdentifier(object)) {
     name = object.name
   } else if (types.isMemberExpression(object)) {
-    // 只找一层 this.props.login => props_login
-    name = getPropertyValue(object.property)
+    // this成员表达式处理 this.props.login => props_login
+    if (isThisMemberExpression(object)) {
+      name = getPropertyValue(object.property)
+    } else {
+      name = getNameByMemberExpression(object)
+    }
   }
 
   if (name) {
@@ -69,12 +58,13 @@ const getNameByCallExpression = node => {
   const argString = _arguments
     .map(nv => {
       if (types.isIdentifier(nv)) return nv.name
-      if (types.isLiteral(nv)) return nv.value
-      if (types.isObjectExpression(nv)) return '$'
-      if (types.isArrayExpression(nv)) return '$$'
+      if (types.isLiteral(nv)) return getLiteralValue(nv)
+      if (isSymbol(nv)) return getSymbolDesc(nv)
+      if (types.isObjectExpression(nv)) return '$' + getObjectKeyNumber(nv)
+      if (types.isArrayExpression(nv)) return '$$' + getArrayLength(nv)
       if (types.isFunction(nv)) return '$$$'
       // this表达式为空参
-      if (types.isThisExpression(nv)) return ''
+      if (types.isThisExpression(nv)) return 'this'
       return '_'
     })
     .filter(Boolean)
@@ -105,13 +95,20 @@ const isSetNameCallExpression = (calleeName, path) => {
 }
 
 /**
+ * 获取组件名
+ * @param {NodePath} componentPath 组件路径
+ * @return {string | null}
+ */
+export function getComponentName(componentPath) {}
+
+/**
  * 使用执行语句替换函数声明和函数表达式
  *
  * @param {string} calleeName setName方法的函数名
  * @param {NodePath} expressionPath 当前jsx属性值路径
  * @param anonymousFuncName 用于生成匿名函数名
  */
-function replaceWithCallStatement(
+export function replaceWithCallStatement(
   calleeName,
   expressionPath,
   anonymousFuncName
@@ -150,7 +147,7 @@ function replaceWithCallStatement(
  * @param {string} calleeName
  * @param {NodePath} argumentPath
  */
-function replaceSpreadWithCallStatement(
+export function replaceSpreadWithCallStatement(
   componentName,
   calleeName,
   argumentPath
@@ -176,12 +173,4 @@ function replaceSpreadWithCallStatement(
   ])
 
   return argumentPath.replaceWith(callExpr)
-}
-
-module.exports = {
-  ACTION_REX,
-  getIncrementId,
-  getComponentName,
-  replaceWithCallStatement,
-  replaceSpreadWithCallStatement
 }

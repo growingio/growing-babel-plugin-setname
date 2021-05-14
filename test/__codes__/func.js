@@ -1,36 +1,41 @@
-const Home = (props) => {
-  const {acc} = props
+const Home = () => {
+  const arrowsFunction = () => {}
+  const anonymousFunction = function() {}
+  function hasNameFunction() {}
 
-  function bbb() {}
-
-  const ccc = () => {}
-
-  const genFun = () => {
-    return () => {}
+  const handlers = {
+    doClick() {}
   }
 
-  const gens = {
-    genFun(){}
+  function getHandler(name) {
+    return function() {}
   }
+
+  const factory = {
+    buildHandler() {
+      return function() {}
+    }
+  }
+
+  const h1 = ""
 
   return (
-    <div>
-      <button onClick={() => {}}>1</button>
-      <button onClick={function aaa() {}}>2</button>
-      <button onClick={function () {}}>3</button>
-      <button onClick={bbb}>4</button>
-      <button onClick={ccc}>5</button>
-      <button name={1}>6</button>
-      <button title={bbb()}>7</button>
-      <button onClick={genFun("111", 12, ["aaa"], true)}>8</button>
-      <button onClick={gens.genFun("222", gens, ()=>{})}>9</button>
-      <button onClick={genFun(["bbb"], {})}>10</button>
-      <button onClick={acc}>11</button>
-      <button onClick={props.cbb}>12</button>
-    </div>
+    <View>
+      <Button onClick={function abc(){}}/>
+      <Button onClick={arrowsFunction}>箭头函数</Button>
+      <Button onClick={anonymousFunction}>匿名函数</Button>
+      <Button onClick={hasNameFunction}>具名函数</Button>
+      <Button onClick={handlers.doClick.bind(this)}>成员函数1</Button>
+      <Button onClick={handlers.doClick}>成员函数2</Button>
+      <Button onClick={getHandler({
+        key: 1, val: 2
+      }, [1, 2, 3])}>高级函数1</Button>
+
+      <Button onClick={getHandler('tab1')}>高阶函数2</Button>
+      <Button onClick={getHandler(h1, this)}>高阶函数3</Button>
+      <Button onClick={getHandler(['test'])}>高阶函数4</Button>
+
+      <Button onClick={factory.buildHandler('tab2')}>高阶函数5</Button>
+    </View>
   )
-}
-
-function f_ss_$_() {
-
 }

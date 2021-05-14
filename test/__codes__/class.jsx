@@ -10,13 +10,14 @@ class Class extends Component {
 
   doOnClick() {}
 
-  aaa() {}
+  arrowsFunction = () => {}
 
   render() {
     return (
       <div {...this.actions}>
-        <button onClick={this.doOnClick.bind(this)}/>
-        <button onClick={this.doOnClick.bind({  })}/>
+        <Button onClick={this.doOnClick.bind(this)}/>
+        <Button onClick={this.arrowsFunction}></Button>
+        <Button onClick={this.props.arrowsFunction}></Button>
       </div>
     )
   }

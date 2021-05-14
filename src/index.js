@@ -1,17 +1,13 @@
-const types = require('@babel/types')
-const { NodePath } = require('@babel/traverse')
-const {
-  diCalleeName,
-  isNeedDealFile,
-  diMethodFromPackage
-} = require('./options')
-const {
-  getIncrementId,
+import types from '@babel/types'
+import { NodePath } from '@babel/traverse'
+import { diCalleeName, isNeedDealFile, diMethodFromPackage } from './options'
+import {
   getComponentName,
   replaceWithCallStatement,
   replaceSpreadWithCallStatement,
   ACTION_REX
-} = require('./transform')
+} from './transform'
+import { getIncrementId } from './nodetk'
 
 /**
  * 判断是不是已经添加过导入语句
@@ -75,8 +71,8 @@ function visitorComponent(path, state) {
   })
 }
 
-function babelPlugin({ template }) {
-  const buildRequire = template(`var FUNC_NAME = require('PACKAGE')`)
+export default function ({ template }) {
+  const buildRequire = template(`var FUNC_NAME = require("PACKAGE")`)
 
   return {
     name: 'babel-plugin-setname',
@@ -107,5 +103,3 @@ function babelPlugin({ template }) {
     }
   }
 }
-
-module.exports = babelPlugin

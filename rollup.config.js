@@ -10,7 +10,8 @@ function getOutput({ file, name, format = 'cjs' }) {
     file: resolve(OUTPUT, file),
     format,
     sourcemap: false,
-    name
+    name,
+    exports: 'auto'
   }
 }
 
