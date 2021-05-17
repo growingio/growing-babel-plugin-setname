@@ -47,28 +47,40 @@ function hasRequire(body, varName) {
 
 /**
  * 访问React组件
- * @param {NodePath} path
- * @param state
+ * @param isFunction 是不是函数组件访问器
+ * TODO 在类组件中，类方法内返回的jsx部分代码中匿名函数名的取值作用于将使用Class，这可能不准确
  */
-function visitorComponent(path, state) {
-  if (!isNeedDealFile(state)) return
-  const calleeName = diCalleeName(state)
-  const compName = getComponentName(path)
-  const anonymousFuncName = getIncrementId('anonymousFunc')
+function getComponentVisitor(isFunction = true) {
+  return function (path, state) {
+    if (!isNeedDealFile(state)) return
+    const calleeName = diCalleeName(state)
+    const compName = getComponentName(path)
+    const anonymousFuncName = getIncrementId(compName + 'Func')
 
-  path.traverse({
-    JSXAttribute(path) {
-      let attrName = path.get('name').node.name
-      let valueExpression = path.get('value.expression')
-      if (!ACTION_REX.test(attrName)) return
-
-      replaceWithCallStatement(calleeName, valueExpression, anonymousFuncName)
-    },
-    JSXSpreadAttribute(path) {
-      let argumentPath = path.get('argument')
-      replaceSpreadWithCallStatement(compName, calleeName, argumentPath)
+    const checkScope = scope => {
+      const scopeNode = path.scope.block
+      return !isFunction || !scope || scope.block === scopeNode
     }
-  })
+
+    path.traverse({
+      JSXAttribute(path) {
+        if (!checkScope(path.scope)) return
+        const attrName = path.get('name').node.name
+        if (!ACTION_REX.test(attrName)) return
+
+        replaceWithCallStatement(
+          calleeName,
+          path.get('value.expression'),
+          anonymousFuncName
+        )
+      },
+      JSXSpreadAttribute(path) {
+        if (!checkScope(path.scope)) return
+        const argumentPath = path.get('argument')
+        replaceSpreadWithCallStatement(compName, calleeName, argumentPath)
+      }
+    })
+  }
 }
 
 export default function ({ template }) {
@@ -98,8 +110,8 @@ export default function ({ template }) {
           )
         }
       },
-      Function: visitorComponent,
-      Class: visitorComponent
+      Function: getComponentVisitor(),
+      Class: getComponentVisitor(false)
     }
   }
 }
