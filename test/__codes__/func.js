@@ -30,12 +30,33 @@ const Home = () => {
       <Button onClick={getHandler({
         key: 1, val: 2
       }, [1, 2, 3])}>高级函数1</Button>
-
       <Button onClick={getHandler('tab1')}>高阶函数2</Button>
       <Button onClick={getHandler(h1, this)}>高阶函数3</Button>
       <Button onClick={getHandler(['test'])}>高阶函数4</Button>
-
       <Button onClick={factory.buildHandler('tab2')}>高阶函数5</Button>
+
+      <button onClick={() => {}}/>
+      <button onClick={() => {}}/>
     </View>
   )
 }
+
+
+function Index() {
+
+  function Abc() {
+    return (
+      <div>
+        <button onClick={() => {}}>left</button>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <button onClick={() => {}}/>
+      <button onClick={() => {}}/>
+    </div>
+  )
+}
+

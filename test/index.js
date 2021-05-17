@@ -16,32 +16,32 @@ fs.mkdirSync(output, { recursive: true })
     file: path.resolve(__dirname, '../lib/index.js'),
     exports: 'default'
   })
-})()
 
-const files = fs.readdirSync(input)
+  const files = fs.readdirSync(input)
 
-files.forEach(filename => {
-  const file = path.join(input, filename)
-  let result = babel.transformFileSync(file, {
-    presets: [
-      [
-        'taro',
-        {
-          framework: 'react',
-          ts: false
-        }
+  files.forEach(filename => {
+    const file = path.join(input, filename)
+    let result = babel.transformFileSync(file, {
+      presets: [
+        [
+          'taro',
+          {
+            framework: 'react',
+            ts: false
+          }
+        ]
+      ],
+      plugins: [
+        [
+          './lib/index.js',
+          {
+            includes: ['test/__codes__'],
+            package: '@gio/setname'
+          }
+        ]
       ]
-    ],
-    plugins: [
-      [
-        './lib/index.js',
-        {
-          includes: ['test/__codes__'],
-          package: '@gio/setname'
-        }
-      ]
-    ]
+    })
+
+    fs.writeFileSync(path.join(output, filename), result.code)
   })
-
-  fs.writeFileSync(path.join(output, filename), result.code)
-})
+})()

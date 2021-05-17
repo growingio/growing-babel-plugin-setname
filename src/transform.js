@@ -10,6 +10,7 @@ import {
   getObjectKeyNumber
 } from './nodetk'
 
+const COMPONENT_FLAG = 'Component'
 export const ACTION_REX = /^on[A-Z][a-zA-Z]+/
 
 /**
@@ -99,7 +100,19 @@ const isSetNameCallExpression = (calleeName, path) => {
  * @param {NodePath} componentPath 组件路径
  * @return {string | null}
  */
-export function getComponentName(componentPath) {}
+export function getComponentName(componentPath) {
+  let name
+  let id = componentPath.node.id
+  if (id) {
+    name = id.name
+  } else {
+    name =
+      componentPath.parent &&
+      componentPath.parent.id &&
+      componentPath.parent.id.name
+  }
+  return name || COMPONENT_FLAG
+}
 
 /**
  * 使用执行语句替换函数声明和函数表达式
@@ -164,7 +177,10 @@ export function replaceSpreadWithCallStatement(
   }
 
   if (!name) {
-    name = componentName || '_spread_'
+    name =
+      !componentName || componentName === COMPONENT_FLAG
+        ? '_spread_'
+        : componentName
   }
 
   const callExpr = types.callExpression(types.identifier(calleeName), [
