@@ -49,3 +49,11 @@ export function getArrayLength(node) {
 export function getObjectKeyNumber(node) {
   return node && node.properties.length
 }
+
+export function isBindCallee(callee) {
+  return (
+    callee &&
+    types.isMemberExpression(callee) &&
+    getPropertyValue(callee.property) === 'bind'
+  )
+}

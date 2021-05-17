@@ -7,7 +7,8 @@ import {
   getSymbolDesc,
   isThisMemberExpression,
   getArrayLength,
-  getObjectKeyNumber
+  getObjectKeyNumber,
+  isBindCallee
 } from './nodetk'
 
 const COMPONENT_FLAG = 'Component'
@@ -56,7 +57,7 @@ const getNameByMemberExpression = node => {
 const getNameByCallExpression = node => {
   const callee = node.callee
   const _arguments = node.arguments
-  const argString = _arguments
+  let argString = _arguments
     .map(nv => {
       if (types.isIdentifier(nv)) return nv.name
       if (types.isLiteral(nv)) return getLiteralValue(nv)
@@ -76,6 +77,10 @@ const getNameByCallExpression = node => {
     callString = callee.name
   } else if (types.isMemberExpression(callee)) {
     callString = getNameByMemberExpression(callee)
+  }
+
+  if (isBindCallee(callee) && argString === 'this') {
+    argString = null
   }
 
   if (callString || argString) {

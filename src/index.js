@@ -48,7 +48,7 @@ function hasRequire(body, varName) {
 /**
  * 访问React组件
  * @param isFunction 是不是函数组件访问器
- * TODO 在类组件中，类方法内返回的jsx部分代码中匿名函数名的取值作用于将使用Class，这可能不准确
+ * TODO 在类组件中，类方法内返回的jsx部分代码中匿名函数名的取值作用域将使用Class，这可能不稳定
  */
 function getComponentVisitor(isFunction = true) {
   return function (path, state) {
