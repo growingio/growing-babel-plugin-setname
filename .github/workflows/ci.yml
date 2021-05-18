@@ -1,0 +1,33 @@
+name: Only Test
+
+on:
+  push:
+    tags-ignore:
+      - '*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  only-test:
+    name: Only Test
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 12
+          registry-url: https://registry.npmjs.org/
+      - name: Cache Node Modules
+        id: cache_deps
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Install
+        if: steps.cache_deps.outputs.cache-hit != 'true'
+        run: yarn install
+      - name: Do Test
+        run: yarn test
