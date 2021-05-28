@@ -118,4 +118,31 @@ describe('babel插件测试', function () {
     expect(result[2].funcName).toBe('HomeFunc0')
     expect(result[3].funcName).toBe('HomeFunc1')
   })
+
+  it('默认导出函数组件', function () {
+    let result = transformJsx(`
+      export default function() {
+        return (
+          <div>
+            <button onClick={(e) => {}}/>
+          </div>
+        )
+      }
+    `)
+    expect(result[0].funcName).toBe('ComponentFunc0')
+  })
+
+  it('兼容Taro2升级', function () {
+    const result = transformJsxWithFunc(
+      `
+      <button onClick={(e) => {}}/>
+      <button onClick={function() {}}/>
+    `,
+      'Index',
+      { lower: true }
+    )
+
+    expect(result[0].funcName).toBe('anonymousFunc0')
+    expect(result[1].funcName).toBe('anonymousFunc1')
+  })
 })

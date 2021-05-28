@@ -25,7 +25,7 @@ export function transformJsx(jsx, opts) {
  * 转化class类型的组件
  * @param jsx
  * @param classname
- * @param {{includes: string[], callee: string, package: string}} opts
+ * @param {{includes: string[], callee: string, package: string, lower: boolean}} opts
  * @returns {{funcName: string, sourceFunc: string, target: string}[]}
  */
 export function transformJsxWithClass(jsx, classname = 'Index', opts = {}) {
@@ -45,7 +45,7 @@ export function transformJsxWithClass(jsx, classname = 'Index', opts = {}) {
  * 转化函数类型的组件
  * @param jsx
  * @param funcname
- * @param {{includes: string[], callee: string, package: string}} opts
+ * @param {{includes: string[], callee: string, package: string, lower: boolean}} opts
  * @returns {{funcName: string, sourceFunc: string, target: string}[]}
  */
 export function transformJsxWithFunc(jsx, funcname = 'Index', opts = {}) {
@@ -63,7 +63,7 @@ export function transformJsxWithFunc(jsx, funcname = 'Index', opts = {}) {
  * 转化箭头函数类型的组件
  * @param jsx
  * @param identifier
- * @param {{includes: string[], callee: string, package: string}} opts
+ * @param {{includes: string[], callee: string, package: string, lower: boolean}} opts
  * @returns {{funcName: string, sourceFunc: string, target: string}[]}
  */
 export function transformJsxWithArrows(jsx, identifier = 'Index', opts = {}) {

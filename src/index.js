@@ -1,6 +1,11 @@
 import types from '@babel/types'
 import { NodePath } from '@babel/traverse'
-import { diCalleeName, isNeedDealFile, diMethodFromPackage } from './options'
+import {
+  diCalleeName,
+  isNeedDealFile,
+  diMethodFromPackage,
+  isUpgradeFromTaro2
+} from './options'
 import {
   getComponentName,
   replaceWithCallStatement,
@@ -55,7 +60,10 @@ function getComponentVisitor(isFunction = true) {
     if (!isNeedDealFile(state)) return
     const calleeName = diCalleeName(state)
     const compName = getComponentName(path)
-    const anonymousFuncName = getIncrementId(compName + 'Func')
+    const fromTaro2 = isUpgradeFromTaro2(state)
+    const anonymousFuncName = getIncrementId(
+      fromTaro2 ? 'anonymousFunc' : compName + 'Func'
+    )
 
     const checkScope = scope => {
       const scopeNode = path.scope.block

@@ -13,6 +13,9 @@ export function isNeedDealFile(state) {
 // 获取设置名函数方法名
 export const diCalleeName = ({ opts }) => opts.callee || '_GIO_DI_NAME_'
 
+// 是不是从Taro2升级来的
+export const isUpgradeFromTaro2 = ({ opts }) => opts.lower || false
+
 // 获取设置函数名的方法来自哪个包
 export function diMethodFromPackage({ opts }) {
   return opts.package || 'babel-plugin-setname/lib/setname'
