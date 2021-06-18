@@ -26,10 +26,10 @@ describe('测试setname', function () {
   it('for function', function () {
     let a = setName('abb', () => {})
     let b = setName('abc', function () {})
-    let c = setName('abcd', function cc() {})
+    let c = setName('abcd', b)
 
     expect(a.name).toBe('abb')
     expect(b.name).toBe('abc')
-    expect(c.name).toBe('abcd')
+    expect(c.name).toBe('abc')
   })
 })
