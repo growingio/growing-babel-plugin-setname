@@ -94,6 +94,6 @@ export function getResultFunctions(code) {
       }
     })
     .concat({
-      target: line
+      target: code
     })
 }

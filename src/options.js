@@ -20,3 +20,15 @@ export const isUpgradeFromTaro2 = ({ opts }) => opts.lower || false
 export function diMethodFromPackage({ opts }) {
   return opts.package || 'babel-plugin-setname/lib/setname'
 }
+
+/**
+ * @returns {RegExp}
+ */
+export function getActionTest({ opts }) {
+  try {
+    if (opts.test instanceof RegExp) {
+      return opts.test
+    }
+  } catch (e) {}
+  return /^on[A-Z][a-zA-Z]+/
+}

@@ -19,7 +19,8 @@ module.exports = {
         includes: ["src"],
         callee: '__setname__',
         package: '@gio/setname',
-        lower: false
+        lower: false,
+        test: /^on[A-Z][a-zA-Z]+/
       }
     ]
   ]
@@ -30,3 +31,4 @@ module.exports = {
 - callee: 设置函数名的方法名(default: `_GIO_DI_NAME_`)
 - package: 设置提供setname函数的包(default: `babel-plugin-setname/lib/setname`)
 - lower: 如果是从Taro2升级来的，可以配置为true已能兼容大部分的已圈选的无埋点事件（无法完全）
+- test: 自定义要转换的jsx属性(default: `/^on[A-Z][a-zA-Z]+/`)

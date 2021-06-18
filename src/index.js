@@ -4,15 +4,15 @@ import {
   diCalleeName,
   isNeedDealFile,
   diMethodFromPackage,
-  isUpgradeFromTaro2
+  isUpgradeFromTaro2,
+  getActionTest
 } from './options'
 import {
   getComponentName,
   replaceWithCallStatement,
-  replaceSpreadWithCallStatement,
-  ACTION_REX
+  replaceSpreadWithCallStatement
 } from './transform'
-import { getIncrementId } from './nodetk'
+import { getIncrementId } from './nodekt'
 
 /**
  * 判断是不是已经添加过导入语句
@@ -74,7 +74,7 @@ function getComponentVisitor(isFunction = true) {
       JSXAttribute(path) {
         if (!checkScope(path.scope)) return
         const attrName = path.get('name').node.name
-        if (!ACTION_REX.test(attrName)) return
+        if (!getActionTest(state).test(attrName)) return
 
         replaceWithCallStatement(
           calleeName,

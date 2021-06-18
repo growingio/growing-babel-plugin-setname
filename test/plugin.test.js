@@ -145,4 +145,30 @@ describe('babel插件测试', function () {
     expect(result[0].funcName).toBe('anonymousFunc0')
     expect(result[1].funcName).toBe('anonymousFunc1')
   })
+
+  it('自定义test-1', function () {
+    const result = transformJsxWithFunc(
+      `
+      <button onClick={() => {}}/>
+      <button doClick={() => {}}/>
+    `,
+      'Index',
+      { test: /^(do|on)[A-Z]\w+/ }
+    )
+
+    expect(result[0].funcName).toBe('IndexFunc0')
+    expect(result[1].funcName).toBe('IndexFunc1')
+  })
+
+  it('自定义test-2', function () {
+    const result = transformJsxWithFunc(
+      `
+      <button onClick={() => {}}/>
+    `,
+      'Index',
+      { test: 'error' }
+    )
+
+    expect(result[0].funcName).toBe('IndexFunc0')
+  })
 })

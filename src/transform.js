@@ -9,10 +9,9 @@ import {
   getArrayLength,
   getObjectKeyNumber,
   isBindCallee
-} from './nodetk'
+} from './nodekt'
 
 const COMPONENT_FLAG = 'Component'
-export const ACTION_REX = /^on[A-Z][a-zA-Z]+/
 
 /**
  * 从成员表达式中获取函数名

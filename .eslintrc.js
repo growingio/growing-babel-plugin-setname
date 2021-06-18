@@ -11,6 +11,7 @@ module.exports = {
   },
   ignorePatterns: ['__codes__', '__output__', 'lib'],
   rules: {
+    'no-undef': 'error',
     'prettier/prettier': [
       'error',
       {
