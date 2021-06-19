@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-setname",
-  "version": "0.1.1-beta",
+  "version": "0.1.1",
   "description": "set the function name for the anonymous function in taro 3",
   "main": "lib/index.js",
   "scripts": {
